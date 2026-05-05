@@ -1,0 +1,16 @@
+{
+  "name": "ecommerce-frutos-secos",
+  "version": "1.0.0",
+  "description": "Aplicacion web ecommerce con catalogo, carrito y administracion de inventario.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "ecommerce",
+    "api-rest",
+    "carrito"
+  ],
+  "author": "",
+  "license": "MIT"
+}
