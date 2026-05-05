@@ -1,7 +1,52 @@
+const STORAGE_KEY_PRODUCTS = "ecommerce-products";
+const STORAGE_KEY_CART = "ecommerce-cart";
+
+const initialProducts = [
+  { id: 1, name: "Mania natural", price: 15, category: "Manias", stock: 40 },
+  { id: 2, name: "Mania garapinada", price: 15, category: "Manias", stock: 35 },
+  { id: 3, name: "Mania saladas", price: 15, category: "Manias", stock: 30 },
+  { id: 4, name: "Mania limon", price: 15, category: "Manias", stock: 28 },
+  { id: 5, name: "Mania picante", price: 15, category: "Manias", stock: 25 },
+  { id: 6, name: "Choco max", price: 20, category: "Manias", stock: 24 },
+  { id: 7, name: "Mania horneada", price: 20, category: "Manias", stock: 32 },
+  { id: 8, name: "Mania japonesa", price: 20, category: "Manias", stock: 22 },
+  { id: 9, name: "Mania japo. picante", price: 25, category: "Manias", stock: 20 },
+  { id: 10, name: "Mix de la casa", price: 20, category: "Manias", stock: 30 },
+  { id: 11, name: "Haba con cascara", price: 25, category: "Manias", stock: 18 },
+  { id: 12, name: "Haba pelada", price: 25, category: "Manias", stock: 18 },
+  { id: 13, name: "Haba pelada jalapeno", price: 30, category: "Manias", stock: 15 },
+  { id: 14, name: "Chispas de chocolate", price: 40, category: "Manias", stock: 14 },
+  { id: 15, name: "Choco menta", price: 20, category: "Manias", stock: 19 },
+  { id: 16, name: "Coco Rallado", price: 25, category: "Manias", stock: 17 },
+  { id: 17, name: "Mania triturada", price: 10, category: "Manias", stock: 45 },
+  { id: 18, name: "Botonetas", price: 15, category: "Manias", stock: 33 },
+  { id: 19, name: "Tajin", price: 15, category: "Manias", stock: 21 },
+  { id: 20, name: "Pasas", price: 15, category: "Manias", stock: 40 },
+  { id: 21, name: "Anicillo", price: 15, category: "Manias", stock: 26 },
+  { id: 22, name: "Granola", price: 15, category: "Manias", stock: 36 },
+  { id: 23, name: "Maranon", price: 45, category: "Especiales", stock: 15 },
+  { id: 24, name: "Almendra", price: 35, category: "Especiales", stock: 20 },
+  { id: 25, name: "Arandanos", price: 30, category: "Especiales", stock: 18 },
+  { id: 26, name: "Macadamia", price: 35, category: "Especiales", stock: 16 },
+  { id: 27, name: "Datiles", price: 35, category: "Especiales", stock: 17 },
+  { id: 28, name: "Pistacho", price: 45, category: "Especiales", stock: 12 },
+  { id: 29, name: "Pepitoria Dorada", price: 35, category: "Especiales", stock: 23 },
+  { id: 30, name: "Nuez de Brasil", price: 55, category: "Especiales", stock: 10 },
+  { id: 31, name: "Nuez pecana", price: 50, category: "Especiales", stock: 11 },
+  { id: 32, name: "Nuez de nogal", price: 45, category: "Especiales", stock: 12 },
+  { id: 33, name: "Mix de chispas", price: 40, category: "Especiales", stock: 18 },
+  { id: 34, name: "Mix maranon, almendra, macadamia y arandano", price: 40, category: "Especiales", stock: 15 },
+  { id: 35, name: "Cafe con chocolate", price: 50, category: "Cubiertos de chocolate", stock: 14 },
+  { id: 36, name: "Maranon con chocolate", price: 50, category: "Cubiertos de chocolate", stock: 12 },
+  { id: 37, name: "Almendra con chocolate", price: 50, category: "Cubiertos de chocolate", stock: 12 },
+  { id: 38, name: "Macadamia chocolate", price: 50, category: "Cubiertos de chocolate", stock: 10 },
+  { id: 39, name: "Arandanos chocolate", price: 50, category: "Cubiertos de chocolate", stock: 13 }
+];
+
 const state = {
   products: [],
   categories: [],
-  cart: JSON.parse(localStorage.getItem("cart") || "{}")
+  cart: JSON.parse(localStorage.getItem(STORAGE_KEY_CART) || "{}")
 };
 
 const els = {
@@ -64,7 +109,7 @@ function formatMoney(value) {
 }
 
 function saveCart() {
-  localStorage.setItem("cart", JSON.stringify(state.cart));
+  localStorage.setItem(STORAGE_KEY_CART, JSON.stringify(state.cart));
 }
 
 function showToast(message) {
@@ -74,18 +119,22 @@ function showToast(message) {
   showToast.timeout = window.setTimeout(() => els.toast.classList.remove("visible"), 2400);
 }
 
-async function api(path, options = {}) {
-  const response = await fetch(path, {
-    headers: { "Content-Type": "application/json", ...(options.headers || {}) },
-    ...options
-  });
+function getCategories(products) {
+  return [...new Set(products.map((product) => product.category))].sort((a, b) =>
+    a.localeCompare(b, "es")
+  );
+}
 
-  const data = await response.json().catch(() => null);
-  if (!response.ok) {
-    throw new Error(data?.error || "No se pudo completar la solicitud.");
-  }
+function saveProducts() {
+  localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(state.products));
+}
 
-  return data;
+function loadData() {
+  const savedProducts = localStorage.getItem(STORAGE_KEY_PRODUCTS);
+  state.products = savedProducts ? JSON.parse(savedProducts) : [...initialProducts];
+  saveProducts();
+  state.categories = getCategories(state.products);
+  renderAll();
 }
 
 function getProduct(id) {
@@ -243,16 +292,6 @@ function renderAll() {
   renderAdminTable();
 }
 
-async function loadData() {
-  const [products, categories] = await Promise.all([
-    api("/api/products?sort=name&direction=asc"),
-    api("/api/categories")
-  ]);
-  state.products = products;
-  state.categories = categories;
-  renderAll();
-}
-
 function addToCart(id) {
   const product = getProduct(id);
   if (!product) return;
@@ -310,15 +349,20 @@ async function saveProduct(event) {
   };
 
   if (id) {
-    await api(`/api/products/${id}`, { method: "PUT", body: JSON.stringify(payload) });
-    showToast("Producto actualizado.");
+    const product = getProduct(id);
+    if (product) {
+      Object.assign(product, payload);
+      showToast("Producto actualizado.");
+    }
   } else {
-    await api("/api/products", { method: "POST", body: JSON.stringify(payload) });
+    const nextId = state.products.reduce((max, product) => Math.max(max, product.id), 0) + 1;
+    state.products.push({ id: nextId, ...payload });
     showToast("Producto creado.");
   }
 
   resetForm();
-  await loadData();
+  saveProducts();
+  loadData();
 }
 
 async function deleteProduct(id) {
@@ -328,11 +372,12 @@ async function deleteProduct(id) {
   const confirmed = window.confirm(`Eliminar ${product.name}?`);
   if (!confirmed) return;
 
-  await api(`/api/products/${id}`, { method: "DELETE" });
+  state.products = state.products.filter((item) => item.id !== id);
   delete state.cart[id];
   saveCart();
+  saveProducts();
   showToast("Producto eliminado.");
-  await loadData();
+  loadData();
 }
 
 function bindEvents() {
