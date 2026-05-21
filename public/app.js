@@ -1,8 +1,6 @@
 const STORAGE_KEY_PRODUCTS = "ecommerce-products";
 const STORAGE_KEY_CART = "ecommerce-cart";
 
-const initialProducts = [ /* ... tus 39 productos se mantienen iguales ... */ ];
-
 const state = {
   products: [],
   categories: [],
@@ -55,7 +53,6 @@ function setPage(page) {
     }
   });
 
-  // Renderizar productos cuando se va al catálogo
   if (target === "catalogo") {
     renderProducts();
   }
@@ -95,10 +92,26 @@ function saveProducts() {
   localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(state.products));
 }
 
-function loadData() {
+async function loadData() {
+  // Intentar cargar desde localStorage primero
   const savedProducts = localStorage.getItem(STORAGE_KEY_PRODUCTS);
-  state.products = savedProducts ? JSON.parse(savedProducts) : [...initialProducts];
-  saveProducts();
+  
+  if (savedProducts) {
+    state.products = JSON.parse(savedProducts);
+  } else {
+    // Cargar desde products.json
+    try {
+      const response = await fetch('/data/products.json');
+      if (!response.ok) throw new Error('Error al cargar productos');
+      state.products = await response.json();
+      saveProducts(); // Guardar en localStorage para futuras visitas
+    } catch (error) {
+      console.error('Error loading products:', error);
+      showToast('Error al cargar los productos');
+      state.products = [];
+    }
+  }
+  
   state.categories = getCategories(state.products);
   renderAll();
 }
@@ -160,6 +173,8 @@ function filteredProducts() {
 }
 
 function renderProducts() {
+  if (!els.productsGrid) return;
+  
   const products = filteredProducts();
   els.productCount.textContent = state.products.length;
   els.productsGrid.innerHTML = "";
@@ -176,7 +191,7 @@ function renderProducts() {
     card.innerHTML = `
       <span class="pill">${product.category}</span>
       <div>
-        <h3>${product.name}</h3>
+        <h3>${escapeHtml(product.name)}</h3>
         <p>Presentacion de 1/2 libra</p>
       </div>
       <div class="price-row">
@@ -188,6 +203,16 @@ function renderProducts() {
       </button>
     `;
     els.productsGrid.append(card);
+  });
+}
+
+// Helper para evitar XSS
+function escapeHtml(str) {
+  return str.replace(/[&<>]/g, function(m) {
+    if (m === '&') return '&amp;';
+    if (m === '<') return '&lt;';
+    if (m === '>') return '&gt;';
+    return m;
   });
 }
 
@@ -214,10 +239,10 @@ function renderCart() {
     item.className = "cart-item";
     item.innerHTML = `
       <div>
-        <h3>${product.name}</h3>
-        <span class="muted">${product.category} - ${formatMoney(product.price)} c/u</span>
+        <h3>${escapeHtml(product.name)}</h3>
+        <span class="muted">${escapeHtml(product.category)} - ${formatMoney(product.price)} c/u</span>
       </div>
-      <div class="quantity-control" aria-label="Cantidad de ${product.name}">
+      <div class="quantity-control" aria-label="Cantidad de ${escapeHtml(product.name)}">
         <button type="button" data-dec="${product.id}">-</button>
         <span>${quantity}</span>
         <button type="button" data-inc="${product.id}" ${quantity >= product.stock ? "disabled" : ""}>+</button>
@@ -236,8 +261,8 @@ function renderAdminTable() {
   state.products.forEach((product) => {
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>${product.name}</td>
-      <td>${product.category}</td>
+      <td>${escapeHtml(product.name)}</td>
+      <td>${escapeHtml(product.category)}</td>
       <td>${formatMoney(product.price)}</td>
       <td>${product.stock}</td>
       <td>
@@ -258,7 +283,6 @@ function renderAll() {
   renderAdminTable();
 }
 
-/* ====================== FUNCIONES DE CARRITO Y ADMIN (sin cambios) ====================== */
 function addToCart(id) {
   const product = getProduct(id);
   if (!product) return;
@@ -305,7 +329,7 @@ function editProduct(id) {
   els.productName.focus();
 }
 
-async function saveProduct(event) {
+function saveProduct(event) {
   event.preventDefault();
   const id = els.productId.value;
   const payload = {
@@ -316,7 +340,7 @@ async function saveProduct(event) {
   };
 
   if (id) {
-    const product = getProduct(id);
+    const product = getProduct(Number(id));
     if (product) {
       Object.assign(product, payload);
       showToast("Producto actualizado.");
@@ -329,10 +353,11 @@ async function saveProduct(event) {
 
   resetForm();
   saveProducts();
-  loadData();
+  state.categories = getCategories(state.products);
+  renderAll();
 }
 
-async function deleteProduct(id) {
+function deleteProduct(id) {
   const product = getProduct(id);
   if (!product) return;
 
@@ -343,59 +368,72 @@ async function deleteProduct(id) {
   delete state.cart[id];
   saveCart();
   saveProducts();
+  state.categories = getCategories(state.products);
   showToast("Producto eliminado.");
-  loadData();
+  renderAll();
 }
 
 function bindEvents() {
   [els.search, els.categoryFilter, els.sort].forEach((input) => {
-    input.addEventListener("input", renderProducts);
+    if (input) input.addEventListener("input", renderProducts);
   });
 
-  els.productsGrid.addEventListener("click", (event) => {
-    const id = event.target.dataset.add;
-    if (id) addToCart(Number(id));
-  });
+  if (els.productsGrid) {
+    els.productsGrid.addEventListener("click", (event) => {
+      const id = event.target.dataset.add;
+      if (id) addToCart(Number(id));
+    });
+  }
 
-  els.cartItems.addEventListener("click", (event) => {
-    const inc = event.target.dataset.inc;
-    const dec = event.target.dataset.dec;
-    const remove = event.target.dataset.remove;
+  if (els.cartItems) {
+    els.cartItems.addEventListener("click", (event) => {
+      const inc = event.target.dataset.inc;
+      const dec = event.target.dataset.dec;
+      const remove = event.target.dataset.remove;
 
-    if (inc) changeQuantity(Number(inc), 1);
-    if (dec) changeQuantity(Number(dec), -1);
-    if (remove) {
-      delete state.cart[remove];
+      if (inc) changeQuantity(Number(inc), 1);
+      if (dec) changeQuantity(Number(dec), -1);
+      if (remove) {
+        delete state.cart[remove];
+        saveCart();
+        renderProducts();
+        renderCart();
+      }
+    });
+  }
+
+  if (els.clearCart) {
+    els.clearCart.addEventListener("click", () => {
+      state.cart = {};
       saveCart();
       renderProducts();
       renderCart();
-    }
-  });
+    });
+  }
 
-  els.clearCart.addEventListener("click", () => {
-    state.cart = {};
-    saveCart();
-    renderProducts();
-    renderCart();
-  });
+  if (els.checkout) {
+    els.checkout.addEventListener("click", () => {
+      const { units, total } = cartTotals();
+      showToast(`Compra lista: ${units} unidades por ${formatMoney(total)}.`);
+    });
+  }
 
-  els.checkout.addEventListener("click", () => {
-    const { units, total } = cartTotals();
-    showToast(`Compra lista: ${units} unidades por ${formatMoney(total)}.`);
-  });
+  if (els.form) {
+    els.form.addEventListener("submit", saveProduct);
+  }
 
-  els.form.addEventListener("submit", (event) => {
-    saveProduct(event).catch((error) => showToast(error.message));
-  });
+  if (els.cancelEdit) {
+    els.cancelEdit.addEventListener("click", resetForm);
+  }
 
-  els.cancelEdit.addEventListener("click", resetForm);
-
-  els.adminTable.addEventListener("click", (event) => {
-    const edit = event.target.dataset.edit;
-    const remove = event.target.dataset.delete;
-    if (edit) editProduct(Number(edit));
-    if (remove) deleteProduct(Number(remove)).catch((error) => showToast(error.message));
-  });
+  if (els.adminTable) {
+    els.adminTable.addEventListener("click", (event) => {
+      const edit = event.target.dataset.edit;
+      const remove = event.target.dataset.delete;
+      if (edit) editProduct(Number(edit));
+      if (remove) deleteProduct(Number(remove));
+    });
+  }
 
   els.navLinks.forEach((button) => {
     button.addEventListener("click", () => setPage(button.dataset.page));
@@ -404,6 +442,10 @@ function bindEvents() {
   window.addEventListener("hashchange", () => setPage(window.location.hash.slice(1)));
 }
 
+// Hacer setPage global para el onclick del home
+window.setPage = setPage;
+
+// Inicializar
 bindEvents();
 setPage(window.location.hash.slice(1) || "home");
-loadData().catch((error) => showToast(error.message));
+loadData();
