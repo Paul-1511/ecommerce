@@ -1,6 +1,49 @@
 const STORAGE_KEY_PRODUCTS = "ecommerce-products";
 const STORAGE_KEY_CART = "ecommerce-cart";
 
+// PRODUCTOS DIRECTAMENTE EMBEBIDOS (tus 39 productos)
+const initialProducts = [
+  {"id": 1, "name": "Mania natural", "price": 15, "category": "Manias", "stock": 40},
+  {"id": 2, "name": "Mania garapinada", "price": 15, "category": "Manias", "stock": 35},
+  {"id": 3, "name": "Mania saladas", "price": 15, "category": "Manias", "stock": 30},
+  {"id": 4, "name": "Mania limon", "price": 15, "category": "Manias", "stock": 28},
+  {"id": 5, "name": "Mania picante", "price": 15, "category": "Manias", "stock": 25},
+  {"id": 6, "name": "Choco max", "price": 20, "category": "Manias", "stock": 24},
+  {"id": 7, "name": "Mania horneada", "price": 20, "category": "Manias", "stock": 32},
+  {"id": 8, "name": "Mania japonesa", "price": 20, "category": "Manias", "stock": 22},
+  {"id": 9, "name": "Mania japo. picante", "price": 25, "category": "Manias", "stock": 20},
+  {"id": 10, "name": "Mix de la casa", "price": 20, "category": "Manias", "stock": 30},
+  {"id": 11, "name": "Haba con cascara", "price": 25, "category": "Manias", "stock": 18},
+  {"id": 12, "name": "Haba pelada", "price": 25, "category": "Manias", "stock": 18},
+  {"id": 13, "name": "Haba pelada jalapeno", "price": 30, "category": "Manias", "stock": 15},
+  {"id": 14, "name": "Chispas de chocolate", "price": 40, "category": "Manias", "stock": 14},
+  {"id": 15, "name": "Choco menta", "price": 20, "category": "Manias", "stock": 19},
+  {"id": 16, "name": "Coco Rallado", "price": 25, "category": "Manias", "stock": 17},
+  {"id": 17, "name": "Mania triturada", "price": 10, "category": "Manias", "stock": 45},
+  {"id": 18, "name": "Botonetas", "price": 15, "category": "Manias", "stock": 33},
+  {"id": 19, "name": "Tajin", "price": 15, "category": "Manias", "stock": 21},
+  {"id": 20, "name": "Pasas", "price": 15, "category": "Manias", "stock": 40},
+  {"id": 21, "name": "Anicillo", "price": 15, "category": "Manias", "stock": 26},
+  {"id": 22, "name": "Granola", "price": 15, "category": "Manias", "stock": 36},
+  {"id": 23, "name": "Maranon", "price": 45, "category": "Especiales", "stock": 15},
+  {"id": 24, "name": "Almendra", "price": 35, "category": "Especiales", "stock": 20},
+  {"id": 25, "name": "Arandanos", "price": 30, "category": "Especiales", "stock": 18},
+  {"id": 26, "name": "Macadamia", "price": 35, "category": "Especiales", "stock": 16},
+  {"id": 27, "name": "Datiles", "price": 35, "category": "Especiales", "stock": 17},
+  {"id": 28, "name": "Pistacho", "price": 45, "category": "Especiales", "stock": 12},
+  {"id": 29, "name": "Pepitoria Dorada", "price": 35, "category": "Especiales", "stock": 23},
+  {"id": 30, "name": "Nuez de Brasil", "price": 55, "category": "Especiales", "stock": 10},
+  {"id": 31, "name": "Nuez pecana", "price": 50, "category": "Especiales", "stock": 11},
+  {"id": 32, "name": "Nuez de nogal", "price": 45, "category": "Especiales", "stock": 12},
+  {"id": 33, "name": "Mix de chispas", "price": 40, "category": "Especiales", "stock": 18},
+  {"id": 34, "name": "Mix maranon, almendra, macadamia y arandano", "price": 40, "category": "Especiales", "stock": 15},
+  {"id": 35, "name": "Cafe con chocolate", "price": 50, "category": "Cubiertos de chocolate", "stock": 14},
+  {"id": 36, "name": "Maranon con chocolate", "price": 50, "category": "Cubiertos de chocolate", "stock": 12},
+  {"id": 37, "name": "Almendra con chocolate", "price": 50, "category": "Cubiertos de chocolate", "stock": 12},
+  {"id": 38, "name": "Macadamia chocolate", "price": 50, "category": "Cubiertos de chocolate", "stock": 10},
+  {"id": 39, "name": "Arandanos chocolate", "price": 50, "category": "Cubiertos de chocolate", "stock": 13}
+];
+
 const state = {
   products: [],
   categories: [],
@@ -76,6 +119,7 @@ function saveCart() {
 }
 
 function showToast(message) {
+  if (!els.toast) return;
   els.toast.textContent = message;
   els.toast.classList.add("visible");
   window.clearTimeout(showToast.timeout);
@@ -92,28 +136,20 @@ function saveProducts() {
   localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(state.products));
 }
 
-async function loadData() {
-  // Intentar cargar desde localStorage primero
+function loadData() {
   const savedProducts = localStorage.getItem(STORAGE_KEY_PRODUCTS);
   
   if (savedProducts) {
     state.products = JSON.parse(savedProducts);
   } else {
-    // Cargar desde products.json
-    try {
-      const response = await fetch('/data/products.json');
-      if (!response.ok) throw new Error('Error al cargar productos');
-      state.products = await response.json();
-      saveProducts(); // Guardar en localStorage para futuras visitas
-    } catch (error) {
-      console.error('Error loading products:', error);
-      showToast('Error al cargar los productos');
-      state.products = [];
-    }
+    // Usar los productos iniciales
+    state.products = [...initialProducts];
+    saveProducts();
   }
   
   state.categories = getCategories(state.products);
   renderAll();
+  console.log("Productos cargados:", state.products.length); // Para depuración
 }
 
 function getProduct(id) {
@@ -134,6 +170,8 @@ function cartTotals() {
 }
 
 function renderCategories() {
+  if (!els.categoryFilter || !els.categoryOptions) return;
+  
   els.categoryFilter.innerHTML = '<option value="">Todas las categorias</option>';
   els.categoryOptions.innerHTML = "";
 
@@ -150,6 +188,8 @@ function renderCategories() {
 }
 
 function filteredProducts() {
+  if (!els.search || !els.categoryFilter || !els.sort) return [];
+  
   const query = els.search.value.trim().toLowerCase();
   const selectedCategory = els.categoryFilter.value;
   const [sort, direction] = els.sort.value.split("-");
@@ -176,7 +216,7 @@ function renderProducts() {
   if (!els.productsGrid) return;
   
   const products = filteredProducts();
-  els.productCount.textContent = state.products.length;
+  if (els.productCount) els.productCount.textContent = state.products.length;
   els.productsGrid.innerHTML = "";
 
   if (!products.length) {
@@ -189,7 +229,7 @@ function renderProducts() {
     const card = document.createElement("article");
     card.className = "product-card";
     card.innerHTML = `
-      <span class="pill">${product.category}</span>
+      <span class="pill">${escapeHtml(product.category)}</span>
       <div>
         <h3>${escapeHtml(product.name)}</h3>
         <p>Presentacion de 1/2 libra</p>
@@ -206,8 +246,8 @@ function renderProducts() {
   });
 }
 
-// Helper para evitar XSS
 function escapeHtml(str) {
+  if (!str) return '';
   return str.replace(/[&<>]/g, function(m) {
     if (m === '&') return '&amp;';
     if (m === '<') return '&lt;';
@@ -218,22 +258,26 @@ function escapeHtml(str) {
 
 function renderCart() {
   const { entries, units, total } = cartTotals();
-  els.cartCount.textContent = units;
-  els.cartTotalMini.textContent = formatMoney(total);
-  els.cartSubtotal.textContent = formatMoney(total);
-  els.cartTotal.textContent = formatMoney(total);
-  els.cartLines.textContent = entries.length;
-  els.cartBadge.textContent = units;
-  els.cartBadge.classList.toggle("has-items", units > 0);
+  if (els.cartCount) els.cartCount.textContent = units;
+  if (els.cartTotalMini) els.cartTotalMini.textContent = formatMoney(total);
+  if (els.cartSubtotal) els.cartSubtotal.textContent = formatMoney(total);
+  if (els.cartTotal) els.cartTotal.textContent = formatMoney(total);
+  if (els.cartLines) els.cartLines.textContent = entries.length;
+  if (els.cartBadge) {
+    els.cartBadge.textContent = units;
+    els.cartBadge.classList.toggle("has-items", units > 0);
+  }
+  if (!els.cartItems) return;
+  
   els.cartItems.innerHTML = "";
 
   if (!entries.length) {
     els.cartItems.innerHTML = '<p class="muted">El carrito esta vacio. Agrega varios productos antes de comprar.</p>';
-    els.checkout.disabled = true;
+    if (els.checkout) els.checkout.disabled = true;
     return;
   }
 
-  els.checkout.disabled = false;
+  if (els.checkout) els.checkout.disabled = false;
   entries.forEach(({ product, quantity }) => {
     const item = document.createElement("article");
     item.className = "cart-item";
@@ -254,8 +298,11 @@ function renderCart() {
 }
 
 function renderAdminTable() {
+  if (!els.adminBadge) return;
   els.adminBadge.textContent = state.products.length;
   els.adminBadge.classList.toggle("has-items", state.products.length > 0);
+  
+  if (!els.adminTable) return;
   els.adminTable.innerHTML = "";
 
   state.products.forEach((product) => {
@@ -270,7 +317,7 @@ function renderAdminTable() {
           <button class="secondary-button" type="button" data-edit="${product.id}">Editar</button>
           <button class="danger-button" type="button" data-delete="${product.id}">Eliminar</button>
         </div>
-      </td>
+       </td>
     `;
     els.adminTable.append(row);
   });
@@ -313,30 +360,31 @@ function changeQuantity(id, delta) {
 }
 
 function resetForm() {
+  if (!els.form) return;
   els.form.reset();
-  els.productId.value = "";
+  if (els.productId) els.productId.value = "";
 }
 
 function editProduct(id) {
   const product = getProduct(id);
   if (!product) return;
 
-  els.productId.value = product.id;
-  els.productName.value = product.name;
-  els.productPrice.value = product.price;
-  els.productCategory.value = product.category;
-  els.productStock.value = product.stock;
-  els.productName.focus();
+  if (els.productId) els.productId.value = product.id;
+  if (els.productName) els.productName.value = product.name;
+  if (els.productPrice) els.productPrice.value = product.price;
+  if (els.productCategory) els.productCategory.value = product.category;
+  if (els.productStock) els.productStock.value = product.stock;
+  if (els.productName) els.productName.focus();
 }
 
 function saveProduct(event) {
   event.preventDefault();
-  const id = els.productId.value;
+  const id = els.productId ? els.productId.value : '';
   const payload = {
-    name: els.productName.value,
-    price: Number(els.productPrice.value),
-    category: els.productCategory.value,
-    stock: Number(els.productStock.value)
+    name: els.productName ? els.productName.value : '',
+    price: Number(els.productPrice ? els.productPrice.value : 0),
+    category: els.productCategory ? els.productCategory.value : '',
+    stock: Number(els.productStock ? els.productStock.value : 0)
   };
 
   if (id) {
@@ -374,9 +422,11 @@ function deleteProduct(id) {
 }
 
 function bindEvents() {
-  [els.search, els.categoryFilter, els.sort].forEach((input) => {
-    if (input) input.addEventListener("input", renderProducts);
-  });
+  if (els.search && els.categoryFilter && els.sort) {
+    [els.search, els.categoryFilter, els.sort].forEach((input) => {
+      input.addEventListener("input", renderProducts);
+    });
+  }
 
   if (els.productsGrid) {
     els.productsGrid.addEventListener("click", (event) => {
@@ -442,10 +492,12 @@ function bindEvents() {
   window.addEventListener("hashchange", () => setPage(window.location.hash.slice(1)));
 }
 
-// Hacer setPage global para el onclick del home
+// Hacer setPage global
 window.setPage = setPage;
 
-// Inicializar
-bindEvents();
-setPage(window.location.hash.slice(1) || "home");
-loadData();
+// Inicializar cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', () => {
+  bindEvents();
+  setPage(window.location.hash.slice(1) || "home");
+  loadData();
+});
