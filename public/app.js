@@ -40,8 +40,7 @@ const initialProducts = [
   {"id": 35, "name": "Cafe con chocolate", "price": 50, "category": "Cubiertos de chocolate", "stock": 14},
   {"id": 36, "name": "Maranon con chocolate", "price": 50, "category": "Cubiertos de chocolate", "stock": 12},
   {"id": 37, "name": "Almendra con chocolate", "price": 50, "category": "Cubiertos de chocolate", "stock": 12},
-  {"id": 38, "name": "Macadamia chocolate", "price": 50, "category": "Cubiertos de chocolate", "stock": 10},
-  {"id": 39, "name": "Arandanos chocolate", "price": 50, "category": "Cubiertos de chocolate", "stock": 13}
+  {"id": 38, "name": "Macadamia chocolate", "price": 50, "category": "Cubiertos de chocolate", "stock": 10}
 ];
 
 // Iconos para cada categoría
