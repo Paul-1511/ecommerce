@@ -63,23 +63,32 @@
         <div class="section-heading">
           <div>
             <p class="eyebrow">Catálogo</p>
-            <h2>Productos por 1/2 libra</h2>
-          </div>
-          <div class="toolbar">
-            <input id="search" type="search" placeholder="Buscar producto o categoria">
-            <select id="category-filter" aria-label="Filtrar por categoria">
-              <option value="">Todas las categorias</option>
-            </select>
-            <select id="sort" aria-label="Ordenar productos">
-              <option value="name-asc">Nombre A-Z</option>
-              <option value="name-desc">Nombre Z-A</option>
-              <option value="price-asc">Precio menor</option>
-              <option value="price-desc">Precio mayor</option>
-              <option value="category-asc">Categoria A-Z</option>
-            </select>
+            <h2>Nuestras Familias de Productos</h2>
           </div>
         </div>
-        <div id="products-grid" class="products-grid"></div>
+        
+        <!-- Vista de familias/categorías -->
+        <div id="categories-view">
+          <div id="categories-grid" class="categories-grid"></div>
+        </div>
+        
+        <!-- Vista de productos por categoría (oculta inicialmente) -->
+        <div id="products-view" class="hidden">
+          <button id="back-to-categories" class="back-button" type="button">← Volver a familias</button>
+          <div class="category-header">
+            <h3 id="current-category-name" class="current-category-title"></h3>
+            <div class="toolbar" id="category-toolbar">
+              <input id="search" type="search" placeholder="Buscar en esta familia">
+              <select id="sort" aria-label="Ordenar productos">
+                <option value="name-asc">Nombre A-Z</option>
+                <option value="name-desc">Nombre Z-A</option>
+                <option value="price-asc">Precio menor</option>
+                <option value="price-desc">Precio mayor</option>
+              </select>
+            </div>
+          </div>
+          <div id="products-grid" class="products-grid"></div>
+        </div>
       </section>
 
       <!-- ====================== CARRITO ====================== -->

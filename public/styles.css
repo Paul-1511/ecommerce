@@ -224,7 +224,101 @@ a {
   transform: translateY(-4px);
 }
 
-/* ==================== OTRAS SECCIONES (mantenidas) ==================== */
+/* ==================== FAMILIAS (CATEGORÍAS) ==================== */
+.categories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.category-card {
+  background: linear-gradient(135deg, #fff 0%, #f8f6f2 100%);
+  border: 2px solid var(--line);
+  border-radius: 20px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.category-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 35px rgba(47, 125, 82, 0.15);
+  border-color: var(--brand);
+}
+
+.category-card:active {
+  transform: translateY(0);
+}
+
+.category-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  display: inline-block;
+}
+
+.category-card h3 {
+  font-size: 1.5rem;
+  margin: 0 0 0.5rem;
+  color: var(--brand-dark);
+}
+
+.category-count {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.category-card .arrow {
+  position: absolute;
+  bottom: 1rem;
+  right: 1.5rem;
+  font-size: 1.2rem;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.category-card:hover .arrow {
+  opacity: 1;
+  transform: translateX(5px);
+}
+
+/* Vista de productos dentro de una categoría */
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  color: var(--brand);
+  padding: 0.5rem 0;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.back-button:hover {
+  background: transparent;
+  transform: translateX(-5px);
+}
+
+.current-category-title {
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 3px solid var(--brand);
+  display: inline-block;
+}
+
+.category-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+/* ==================== OTRAS SECCIONES ==================== */
 .hidden {
   display: none !important;
 }
@@ -235,41 +329,13 @@ main {
   margin: 0 auto;
 }
 
-.summary-band {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.summary-band div,
-.workspace,
-.checkout-panel {
+.workspace {
   background: var(--panel);
   border: 1px solid var(--line);
-  box-shadow: var(--shadow);
-}
-
-.summary-band div {
-  padding: 1rem;
-  border-radius: 8px;
-}
-
-.summary-band strong {
-  display: block;
-  font-size: 1.45rem;
-}
-
-.summary-band span,
-.product-card p,
-.muted {
-  color: var(--muted);
-}
-
-.workspace {
   border-radius: 8px;
   padding: clamp(1rem, 3vw, 1.5rem);
   margin-bottom: 1.25rem;
+  box-shadow: var(--shadow);
 }
 
 .section-heading {
@@ -286,9 +352,9 @@ main {
 
 .toolbar {
   display: grid;
-  grid-template-columns: minmax(220px, 1.5fr) minmax(170px, 1fr) minmax(160px, 1fr);
+  grid-template-columns: minmax(220px, 1.5fr) minmax(160px, 1fr);
   gap: 0.6rem;
-  width: min(100%, 720px);
+  width: min(100%, 500px);
 }
 
 input, select {
@@ -514,8 +580,7 @@ th {
 
   .toolbar,
   .split,
-  .admin-form,
-  .summary-band {
+  .admin-form {
     grid-template-columns: 1fr;
   }
 
@@ -529,5 +594,9 @@ th {
 
   .hero-logo {
     width: 160px;
+  }
+  
+  .categories-grid {
+    grid-template-columns: 1fr;
   }
 }
