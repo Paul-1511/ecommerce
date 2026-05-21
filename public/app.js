@@ -78,7 +78,7 @@ const els = {
   adminBadge: document.querySelector("#admin-badge")
 };
 
-const pages = ["catalogo", "carrito", "admin"];
+const pages = ["home", "catalogo", "carrito", "admin"];
 
 function setPage(page) {
   const target = pages.includes(page) ? page : "catalogo";
@@ -438,5 +438,5 @@ function bindEvents() {
 }
 
 bindEvents();
-setPage(window.location.hash.slice(1) || "catalogo");
+setPage(window.location.hash.slice(1) || "home");
 loadData().catch((error) => showToast(error.message));
