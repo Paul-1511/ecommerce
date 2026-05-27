@@ -39,7 +39,7 @@ const productImages = {
   "Mix maranon, almendra, macadamia y arandano": "mix-maranon-almendra-macadamia-arandano.jpg",
   "Cafe con chocolate": "cafe-con-chocolate.jpg",
   "Maranon con chocolate": "maranon-con-chocolate.jpg",
-  "Almendra con chocolate": "chocolate.jpg",
+  "Almendra con chocolate": "almendra-con-chocolate.jpg",
   "Macadamia chocolate": "macadamia-chocolate.jpg",
   "Arandanos chocolate": "arandano-chocolate.jpg"
 };
