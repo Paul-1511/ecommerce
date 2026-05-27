@@ -23,7 +23,7 @@ const productImages = {
   "Botonetas": "botonetas.jpg",
   "Tajin": "tajin.jpg",
   "Pasas": "pasas.jpg",
-  "Anicillo": "granola.jpg",
+  "Anicillo": "anicillo.png",
   "Granola": "granola.jpg",
   "Maranon": "maranon.jpg",
   "Almendra": "maranon.jpg",
@@ -353,7 +353,7 @@ function renderAdminTable() {
           <button class="secondary-button" data-edit="${product.id}">Editar</button>
           <button class="danger-button" data-delete="${product.id}">Eliminar</button>
         </div>
-      </td>
+       </td>
     `;
     adminTable.appendChild(row);
   });
@@ -462,6 +462,45 @@ function escapeHtml(str) {
   });
 }
 
+// FUNCIÓN PRINCIPAL DE NAVEGACIÓN - CORREGIDA
+function setPage(page) {
+  const pages = ['home', 'catalogo', 'carrito', 'admin'];
+  const target = pages.includes(page) ? page : 'home';
+  
+  pages.forEach(sectionId => {
+    const section = document.getElementById(sectionId);
+    const button = document.querySelector(`.nav-link[data-page="${sectionId}"]`);
+    if (section) {
+      section.classList.toggle('hidden', sectionId !== target);
+    }
+    if (button) {
+      button.classList.toggle('active', sectionId === target);
+    }
+  });
+  
+  // Actualizar el hash sin disparar el evento nuevamente
+  if (window.location.hash.slice(1) !== target) {
+    window.history.pushState(null, '', `#${target}`);
+  }
+  
+  // Resetear la vista de catálogo si es necesario
+  if (target === 'catalogo') {
+    state.currentCategory = null;
+    state.searchQuery = '';
+    state.sortBy = 'name-asc';
+    const searchInput = document.getElementById('search');
+    const sortSelect = document.getElementById('sort');
+    if (searchInput) searchInput.value = '';
+    if (sortSelect) sortSelect.value = 'name-asc';
+    
+    const categoriesView = document.getElementById('categories-view');
+    const productsView = document.getElementById('products-view');
+    if (categoriesView) categoriesView.classList.remove('hidden');
+    if (productsView) productsView.classList.add('hidden');
+    renderCategoriesGrid();
+  }
+}
+
 function init() {
   const savedCart = localStorage.getItem(STORAGE_KEY_CART);
   if (savedCart) state.cart = JSON.parse(savedCart);
@@ -478,67 +517,87 @@ function init() {
   
   renderAll();
   
-  document.getElementById('back-to-categories').onclick = () => {
-    state.currentCategory = null;
-    document.getElementById('categories-view').classList.remove('hidden');
-    document.getElementById('products-view').classList.add('hidden');
-    document.getElementById('search').value = '';
-    state.searchQuery = '';
-    renderCategoriesGrid();
-  };
-  
-  document.getElementById('search').oninput = (e) => {
-    state.searchQuery = e.target.value;
-    if (state.currentCategory) renderProductsByCategory();
-  };
-  
-  document.getElementById('sort').onchange = (e) => {
-    state.sortBy = e.target.value;
-    if (state.currentCategory) renderProductsByCategory();
-  };
-  
-  document.getElementById('product-form').addEventListener('submit', saveProduct);
-  document.getElementById('cancel-edit').onclick = () => {
-    document.getElementById('product-form').reset();
-    document.getElementById('product-id').value = '';
-  };
-}
-
-window.setPage = function(page) {
-  const pages = ['home', 'catalogo', 'carrito', 'admin'];
-  const target = pages.includes(page) ? page : 'home';
-  
-  pages.forEach(sectionId => {
-    const section = document.getElementById(sectionId);
-    const button = document.querySelector(`[data-page="${sectionId}"]`);
-    if (section) section.classList.toggle('hidden', sectionId !== target);
-    if (button) button.classList.toggle('active', sectionId === target);
-  });
-  
-  if (target === 'catalogo') {
-    const categoriesView = document.getElementById('categories-view');
-    const productsView = document.getElementById('products-view');
-    if (categoriesView) categoriesView.classList.remove('hidden');
-    if (productsView) productsView.classList.add('hidden');
-    renderCategoriesGrid();
+  // Eventos de la vista de catálogo
+  const backButton = document.getElementById('back-to-categories');
+  if (backButton) {
+    backButton.onclick = () => {
+      state.currentCategory = null;
+      document.getElementById('categories-view').classList.remove('hidden');
+      document.getElementById('products-view').classList.add('hidden');
+      const searchInput = document.getElementById('search');
+      if (searchInput) searchInput.value = '';
+      state.searchQuery = '';
+      renderCategoriesGrid();
+    };
   }
   
-  window.location.hash = target;
-};
-
-window.addEventListener('hashchange', () => {
+  const searchInput = document.getElementById('search');
+  if (searchInput) {
+    searchInput.oninput = (e) => {
+      state.searchQuery = e.target.value;
+      if (state.currentCategory) renderProductsByCategory();
+    };
+  }
+  
+  const sortSelect = document.getElementById('sort');
+  if (sortSelect) {
+    sortSelect.onchange = (e) => {
+      state.sortBy = e.target.value;
+      if (state.currentCategory) renderProductsByCategory();
+    };
+  }
+  
+  // Eventos del formulario de admin
+  const productForm = document.getElementById('product-form');
+  if (productForm) {
+    productForm.addEventListener('submit', saveProduct);
+  }
+  
+  const cancelEdit = document.getElementById('cancel-edit');
+  if (cancelEdit) {
+    cancelEdit.onclick = () => {
+      document.getElementById('product-form').reset();
+      document.getElementById('product-id').value = '';
+    };
+  }
+  
+  // Eventos de navegación - REASIGNAR PARA ASEGURAR QUE FUNCIONEN
+  const navButtons = document.querySelectorAll('.nav-link');
+  navButtons.forEach(button => {
+    // Remover eventos anteriores para evitar duplicados
+    button.removeEventListener('click', handleNavClick);
+    button.addEventListener('click', handleNavClick);
+  });
+  
+  // Manejar hashchange
+  window.removeEventListener('hashchange', handleHashChange);
+  window.addEventListener('hashchange', handleHashChange);
+  
+  // Inicializar página según hash
   const hash = window.location.hash.slice(1) || 'home';
-  window.setPage(hash);
-});
+  setPage(hash);
+}
 
+// Manejador de clics en navegación
+function handleNavClick(e) {
+  const page = e.currentTarget.getAttribute('data-page');
+  if (page) {
+    setPage(page);
+  }
+}
+
+// Manejador de cambio de hash
+function handleHashChange() {
+  const hash = window.location.hash.slice(1) || 'home';
+  setPage(hash);
+}
+
+// Exponer setPage globalmente para el botón del home
+window.setPage = setPage;
+
+// Iniciar cuando el DOM esté listo
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
 } else {
   init();
-}
-
-if (window.location.hash) {
-  window.setPage(window.location.hash.slice(1));
-} else {
-  window.setPage('home');
 }
