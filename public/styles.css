@@ -627,3 +627,96 @@ th {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   }
 }
+
+/* ==================== EQUIPO ==================== */
+.team-section {
+  margin: 4rem auto;
+  max-width: 1200px;
+}
+
+.team-title {
+  text-align: center;
+  font-size: 2rem;
+  color: var(--brand-dark);
+  margin-bottom: 2.5rem;
+  position: relative;
+}
+
+.team-title:after {
+  content: '';
+  display: block;
+  width: 80px;
+  height: 4px;
+  background: var(--brand);
+  margin: 0.75rem auto 0;
+  border-radius: 2px;
+}
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+.team-card {
+  background: var(--panel);
+  border-radius: 20px;
+  padding: 1.5rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+.team-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 25px 40px rgba(47, 125, 82, 0.15);
+  border-color: var(--brand);
+}
+
+.team-image {
+  width: 180px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin-bottom: 1rem;
+  border: 4px solid var(--soft);
+  transition: transform 0.3s ease;
+}
+
+.team-card:hover .team-image {
+  transform: scale(1.02);
+  border-color: var(--brand);
+}
+
+.team-card h3 {
+  font-size: 1.25rem;
+  margin: 0.5rem 0;
+  color: var(--brand-dark);
+}
+
+.team-role {
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+@media (max-width: 768px) {
+  .team-grid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+  }
+  
+  .team-image {
+    width: 140px;
+    height: 140px;
+  }
+  
+  .team-card h3 {
+    font-size: 1rem;
+  }
+}
