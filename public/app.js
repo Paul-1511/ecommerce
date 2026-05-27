@@ -137,6 +137,30 @@ function updateBadges() {
   if (adminBadge) adminBadge.textContent = state.products.length;
 }
 
+function updateCartSummary() {
+  const entries = Object.entries(state.cart)
+    .map(([id, quantity]) => ({ product: state.products.find(p => p.id === parseInt(id)), quantity }))
+    .filter(item => item.product && item.quantity > 0);
+  
+  const units = entries.reduce((sum, item) => sum + item.quantity, 0);
+  const total = entries.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  
+  const cartSubtotal = document.getElementById('cart-subtotal');
+  const cartTotal = document.getElementById('cart-total');
+  const cartLines = document.getElementById('cart-lines');
+  const cartCount = document.getElementById('cart-count');
+  const cartTotalMini = document.getElementById('cart-total-mini');
+  
+  if (cartSubtotal) cartSubtotal.textContent = `Q${total.toFixed(2)}`;
+  if (cartTotal) cartTotal.textContent = `Q${total.toFixed(2)}`;
+  if (cartLines) cartLines.textContent = entries.length;
+  if (cartCount) cartCount.textContent = units;
+  if (cartTotalMini) cartTotalMini.textContent = `Q${total.toFixed(2)}`;
+  
+  updateBadges();
+  return { entries, units, total };
+}
+
 function renderCategoriesGrid() {
   const categoriesGrid = document.getElementById('categories-grid');
   if (!categoriesGrid) return;
@@ -233,7 +257,7 @@ function renderProductsByCategory() {
       state.cart[id] = current + 1;
       localStorage.setItem(STORAGE_KEY_CART, JSON.stringify(state.cart));
       renderProductsByCategory();
-      updateBadges();
+      updateCartSummary();
       showToast("Agregado al carrito");
     };
   });
@@ -241,24 +265,12 @@ function renderProductsByCategory() {
 
 function renderCart() {
   const cartItems = document.getElementById('cart-items');
-  const cartSubtotal = document.getElementById('cart-subtotal');
-  const cartTotal = document.getElementById('cart-total');
-  const cartLines = document.getElementById('cart-lines');
   const clearCart = document.getElementById('clear-cart');
   const checkout = document.getElementById('checkout');
   
   if (!cartItems) return;
   
-  const entries = Object.entries(state.cart)
-    .map(([id, quantity]) => ({ product: state.products.find(p => p.id === parseInt(id)), quantity }))
-    .filter(item => item.product && item.quantity > 0);
-  
-  const units = entries.reduce((sum, item) => sum + item.quantity, 0);
-  const total = entries.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-  
-  if (cartSubtotal) cartSubtotal.textContent = `Q${total.toFixed(2)}`;
-  if (cartTotal) cartTotal.textContent = `Q${total.toFixed(2)}`;
-  if (cartLines) cartLines.textContent = entries.length;
+  const { entries, units, total } = updateCartSummary();
   
   cartItems.innerHTML = '';
   
@@ -279,43 +291,52 @@ function renderCart() {
         <span class="muted">${escapeHtml(product.category)} - Q${product.price.toFixed(2)} c/u</span>
       </div>
       <div class="quantity-control">
-        <button data-dec="${product.id}">-</button>
+        <button class="cart-dec" data-id="${product.id}">-</button>
         <span>${quantity}</span>
-        <button data-inc="${product.id}" ${quantity >= product.stock ? 'disabled' : ''}>+</button>
+        <button class="cart-inc" data-id="${product.id}" ${quantity >= product.stock ? 'disabled' : ''}>+</button>
       </div>
-      <button class="danger-button" data-remove="${product.id}">Quitar</button>
+      <button class="danger-button cart-remove" data-id="${product.id}">Quitar</button>
     `;
     cartItems.appendChild(item);
   });
   
-  document.querySelectorAll('[data-dec]').forEach(btn => {
-    btn.onclick = () => changeQuantity(parseInt(btn.dataset.dec), -1);
+  // Asignar eventos del carrito
+  document.querySelectorAll('.cart-dec').forEach(btn => {
+    btn.onclick = () => changeQuantity(parseInt(btn.dataset.id), -1);
   });
-  document.querySelectorAll('[data-inc]').forEach(btn => {
-    btn.onclick = () => changeQuantity(parseInt(btn.dataset.inc), 1);
+  document.querySelectorAll('.cart-inc').forEach(btn => {
+    btn.onclick = () => changeQuantity(parseInt(btn.dataset.id), 1);
   });
-  document.querySelectorAll('[data-remove]').forEach(btn => {
+  document.querySelectorAll('.cart-remove').forEach(btn => {
     btn.onclick = () => {
-      delete state.cart[btn.dataset.remove];
+      delete state.cart[btn.dataset.id];
       localStorage.setItem(STORAGE_KEY_CART, JSON.stringify(state.cart));
       renderCart();
-      updateBadges();
       if (state.currentCategory) renderProductsByCategory();
+      showToast("Producto eliminado del carrito");
     };
   });
   
+  // Botón vaciar carrito
   if (clearCart) {
     clearCart.onclick = () => {
-      state.cart = {};
-      localStorage.setItem(STORAGE_KEY_CART, JSON.stringify(state.cart));
-      renderCart();
-      updateBadges();
-      if (state.currentCategory) renderProductsByCategory();
+      if (entries.length > 0 && confirm('¿Vaciar todo el carrito?')) {
+        state.cart = {};
+        localStorage.setItem(STORAGE_KEY_CART, JSON.stringify(state.cart));
+        renderCart();
+        if (state.currentCategory) renderProductsByCategory();
+        showToast("Carrito vaciado");
+      }
     };
   }
   
+  // Botón checkout
   if (checkout) {
-    checkout.onclick = () => showToast(`Compra lista: ${units} unidades por Q${total.toFixed(2)}`);
+    checkout.onclick = () => {
+      if (entries.length > 0) {
+        showToast(`✅ Compra lista: ${units} unidades por Q${total.toFixed(2)}`);
+      }
+    };
   }
 }
 
@@ -326,13 +347,16 @@ function changeQuantity(id, delta) {
   const current = state.cart[id] || 0;
   const next = Math.min(product.stock, Math.max(0, current + delta));
   
-  if (next === 0) delete state.cart[id];
-  else state.cart[id] = next;
+  if (next === 0) {
+    delete state.cart[id];
+  } else {
+    state.cart[id] = next;
+  }
   
   localStorage.setItem(STORAGE_KEY_CART, JSON.stringify(state.cart));
   renderCart();
-  updateBadges();
   if (state.currentCategory) renderProductsByCategory();
+  updateCartSummary();
 }
 
 function renderAdminTable() {
@@ -353,7 +377,7 @@ function renderAdminTable() {
           <button class="secondary-button" data-edit="${product.id}">Editar</button>
           <button class="danger-button" data-delete="${product.id}">Eliminar</button>
         </div>
-       </td>
+      </td>
     `;
     adminTable.appendChild(row);
   });
@@ -449,7 +473,7 @@ function renderAll() {
   renderCategoriesGrid();
   renderCart();
   renderAdminTable();
-  updateBadges();
+  updateCartSummary();
 }
 
 function escapeHtml(str) {
@@ -462,7 +486,7 @@ function escapeHtml(str) {
   });
 }
 
-// FUNCIÓN PRINCIPAL DE NAVEGACIÓN - CORREGIDA
+// FUNCIÓN PRINCIPAL DE NAVEGACIÓN
 function setPage(page) {
   const pages = ['home', 'catalogo', 'carrito', 'admin'];
   const target = pages.includes(page) ? page : 'home';
@@ -478,12 +502,10 @@ function setPage(page) {
     }
   });
   
-  // Actualizar el hash sin disparar el evento nuevamente
   if (window.location.hash.slice(1) !== target) {
     window.history.pushState(null, '', `#${target}`);
   }
   
-  // Resetear la vista de catálogo si es necesario
   if (target === 'catalogo') {
     state.currentCategory = null;
     state.searchQuery = '';
@@ -561,24 +583,20 @@ function init() {
     };
   }
   
-  // Eventos de navegación - REASIGNAR PARA ASEGURAR QUE FUNCIONEN
+  // Eventos de navegación
   const navButtons = document.querySelectorAll('.nav-link');
   navButtons.forEach(button => {
-    // Remover eventos anteriores para evitar duplicados
     button.removeEventListener('click', handleNavClick);
     button.addEventListener('click', handleNavClick);
   });
   
-  // Manejar hashchange
   window.removeEventListener('hashchange', handleHashChange);
   window.addEventListener('hashchange', handleHashChange);
   
-  // Inicializar página según hash
   const hash = window.location.hash.slice(1) || 'home';
   setPage(hash);
 }
 
-// Manejador de clics en navegación
 function handleNavClick(e) {
   const page = e.currentTarget.getAttribute('data-page');
   if (page) {
@@ -586,16 +604,13 @@ function handleNavClick(e) {
   }
 }
 
-// Manejador de cambio de hash
 function handleHashChange() {
   const hash = window.location.hash.slice(1) || 'home';
   setPage(hash);
 }
 
-// Exponer setPage globalmente para el botón del home
 window.setPage = setPage;
 
-// Iniciar cuando el DOM esté listo
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
 } else {
